@@ -1,5 +1,5 @@
 import URL from 'url';
-import { GotError } from 'got';
+import { RequestError } from 'got';
 import pAll from 'p-all';
 import parseLinkHeader from 'parse-link-header';
 import {
@@ -19,10 +19,12 @@ export const setBaseUrl = (url: string): void => {
   baseUrl = url;
 };
 
-type GotRequestError<E = unknown, T = unknown> = GotError & {
-  body: {
-    message?: string;
-    errors?: E[];
+type GotRequestError<E = unknown, T = unknown> = RequestError & {
+  response: {
+    body: {
+      message?: string;
+      errors?: E[];
+    };
   };
   headers?: Record<string, T>;
 };
@@ -51,8 +53,8 @@ export function handleGotError(
 ): never {
   const path = url.toString();
   let message = err.message || '';
-  if (err.body?.message) {
-    message = err.body.message;
+  if (err.response.body?.message) {
+    message = err.response.body.message;
   }
   if (
     err.name === 'RequestError' &&
@@ -116,9 +118,9 @@ export function handleGotError(
     ) {
       throw err;
     } else if (
-      err.body &&
-      err.body.errors &&
-      err.body.errors.find((e: any) => e.code === 'invalid')
+      err.response.body &&
+      err.response.body.errors &&
+      err.response.body.errors.find((e: any) => e.code === 'invalid')
     ) {
       throw new Error(REPOSITORY_CHANGED);
     }
@@ -126,7 +128,7 @@ export function handleGotError(
     throw new Error(PLATFORM_FAILURE);
   }
   if (err.statusCode === 404) {
-    logger.debug({ url: err.url }, 'GitHub 404');
+    logger.debug({ url: err.options.url }, 'GitHub 404');
   } else {
     logger.debug({ err }, 'Unknown GitHub error');
   }
