@@ -1,4 +1,4 @@
-import got from 'got';
+import * as got from 'got';
 import Git from 'simple-git/promise';
 import { RenovateConfig } from '../config/common';
 import {
@@ -36,7 +36,7 @@ export interface GotApiOptions {
   body?: any;
 }
 
-export type GotResponse<T extends object = any> = got.Response<T>;
+export type GotResponse<T = unknown> = got.Response<T>;
 
 export interface GotApi<TOptions extends object = any> {
   get<T extends object = any>(
